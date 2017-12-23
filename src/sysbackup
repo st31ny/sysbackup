@@ -210,6 +210,14 @@ if [ $? -ne 0 ] ; then
     echo_error "Reading source files failed."
     exit 8
 fi
+# verify unique names
+# https://stackoverflow.com/a/22055411/5605853
+uniqueNum=$(printf '%s\n' "${srcnames[@]}"|awk '!($0 in seen){seen[$0];c++} END {print c}')
+if (( uniqueNum != ${#srcnames[@]} )) ; then
+    echo_error "Source names not unique."
+    exit 9
+fi
+
 echo_verbose "Reading source files done."
 
 #####################################################################################
