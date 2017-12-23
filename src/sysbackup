@@ -166,7 +166,7 @@ EOF
 
 # sanitize stuff
 if [ "$TARGET" == "" ]; then
-    echo_error "No TARGET defined! Set in $SOURCE."
+    echo_error "No TARGET defined! Set in $CONFIG."
     exit 6
 fi
 
@@ -185,7 +185,7 @@ srcnames=()
 srcdirs=()
 echo_verbose "Reading source files..."
 for file in $SOURCES; do
-    echo_verbose "Reading source file '$file'..."
+    echo_verbose ".Reading source file '$file'..."
     while read -r line
     do
         [ "$line" == "" ] && continue
@@ -203,16 +203,14 @@ for file in $SOURCES; do
         fi
         srcnames+=("$name")
         srcdirs+=("$dir")
-        echo_verbose "Will backup '$dir' with target name '$name'"
+        echo_verbose "..Will backup '$dir' with target name '$name'"
     done < "$file"
 done
 if [ $? -ne 0 ] ; then
     echo_error "Reading source files failed."
     exit 8
 fi
-
-echo_verbose "srcnames: ${srcnames[@]}"
-echo_verbose "srcdirs: ${srcdirs[@]}"
+echo_verbose "Reading source files done."
 
 #####################################################################################
 ## Run all scripts
@@ -222,12 +220,13 @@ for file in $SCRIPTS; do
     if [ -x "$file" ]; then
         name="$(basename "$file")"
         dir="$SCRIPTS_WD/$name"
-        echo_verbose "Creating script wd '$dir'."
+        echo_verbose ".Creating script wd '$dir'."
         $DRYRUN mkdir -p "$dir"
         echo_verbose "Running script '$file' (WD='$dir')."
         $DRYRUN "(cd "$dir"; 0<&- "$file" > "$dir"/stdout)"
     fi
 done
+echo_verbose "Running scripts in '$SCRIPTS' done."
 
 #####################################################################################
 ## Xfer
@@ -236,9 +235,10 @@ for i in "${!srcnames[@]}"; do
     name="${srcnames[$i]}"
     path="${srcdirs[$i]}"
     dest="$TARGET/$name"
+    echo_verbose ".Preparing '$name'..."
     options="$RSYNC_OPTIONS_DEFAULT"
     if [ "$EXCLUDEMARKER" != "" ] ; then
-        echo_verbose "Find excluded dirs for '$name' in '$path'"
+        echo_verbose "..Find excluded dirs for '$name' in '$path'"
         $DRYRUN find "$path" -type f -name "$EXCLUDEMARKER" -fprintf "$tmpfile" '%h\n'
         options+=" --exclude-from=$tmpfile"
     fi
