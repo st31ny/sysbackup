@@ -1,0 +1,23 @@
+Source: sysbackup
+Section: admin
+Priority: optional
+Maintainer: Maximilian Stein <m@steiny.biz>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.8
+Homepage: https://github.com/steinymity/sysbackup
+
+Package: sysbackup
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, rsync
+Recommends: openssh-client
+Description: rsync wrapper for easy setup of remote backup scenarios
+ Sysbackup is a bash script that simply reads source directories from files in
+ the configuration directory. Each source directory is then transfered to a
+ target address using rsync.
+ The source file definitions can be split up into many files (just like
+ /etc/apt/sources.list.d/), so automated setup routines can easily configure
+ their data directories that need to be backed up.
+ Before actually transfering data, optional scripts can be executed to generate
+ the data that is to be backed up.
+ Two helper scripts generate and show the ssh key of the sysbackup user for easy
+ setup of remote ssh servers.
