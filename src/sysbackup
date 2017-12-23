@@ -10,6 +10,7 @@ SOURCES_DEFAULT="$CONFIGDIR/sources/*.list"
 SCRIPTS=""
 SCRIPTS_DEFAULT="$CONFIGDIR/scripts/*"
 TARGET=
+SSH_ID_FILE="$SYSBACKUP_ROOT/var/lib/sysbackup/.ssh/id_rsa"
 EXCLUDEMARKER=".sysbackup-exclude"
 RSYNC_OPTIONS_DEFAULT="--archive --delete --delete-excluded --one-file-system \
                        --compress --hard-links --inplace --numeric-ids"
@@ -241,8 +242,13 @@ for i in "${!srcnames[@]}"; do
         $DRYRUN find "$path" -type f -name "$EXCLUDEMARKER" -fprintf "$tmpfile" '%h\n'
         options+=" --exclude-from=$tmpfile"
     fi
-    $verbose && options+=" $RSYNC_OPTIONS_VERBOSE"
-    options+="$RSYNC_OPTIONS"
+    if [ "$SSH_ID_FILE" != "" ] ; then
+        options+=" --rsh=\"ssh -i '$SSH_ID_FILE'\""
+    fi
+    if [ "$verbose" = true ] ; then
+        options+=" $RSYNC_OPTIONS_VERBOSE"
+    fi
+    options+=" $RSYNC_OPTIONS"
 
     echo_normal "Backup $path => $dest"
     $DRYRUN rsync $options "$path" "$dest"
