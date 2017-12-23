@@ -1,3 +1,9 @@
+sysbackup (0.1-4) unstable; urgency=medium
+
+  * Fix manpage installation
+
+ -- Maximilian Stein <ms@alarm-dispatcher.de>  Sat, 23 Dec 2017 14:17:51 +0100
+
 sysbackup (0.1-3) unstable; urgency=medium
 
   * Fix postinst
