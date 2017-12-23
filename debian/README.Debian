@@ -1,7 +1,7 @@
 sysbackup for Debian
 -------------------
 
-A systemd service service and timer have been added to the package. The timer
+A systemd service and timer have been added to the package. The timer
 schedules the service daily at 5:43 in the morning. The service unit stays
 active until the backup is complete.
 
