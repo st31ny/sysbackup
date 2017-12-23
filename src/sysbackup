@@ -222,8 +222,12 @@ for file in $SCRIPTS; do
         dir="$SCRIPTS_WD/$name"
         echo_verbose ".Creating script wd '$dir'."
         $DRYRUN mkdir -p "$dir"
-        echo_verbose "Running script '$file' (WD='$dir')."
-        $DRYRUN "(cd "$dir"; 0<&- "$file" > "$dir"/stdout)"
+        echo_verbose "..Running script '$file' (WD='$dir')."
+        if [ "$DRY_RUN" = true ] ; then
+            $DRYRUN "(cd "$dir"; 0<&- "$file" > "$dir/stdout")"
+        else
+            (cd "$dir"; 0<&- "$file" > "$dir/stdout")
+        fi
     fi
 done
 echo_verbose "Running scripts in '$SCRIPTS' done."
