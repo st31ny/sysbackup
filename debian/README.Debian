@@ -6,11 +6,18 @@ active until the backup is complete and avoids multiple parallel backups.
 
 By default, sysbackup is run as user "sysbackup". In order to run it as root,
 use `systemctl edit --full sysbackup.service` and change the stanza
-appropriately.
+appropriately. If you want to allow backup of data that cannot be read by the
+sysbackup user, consider using ACLs (package "acl") if your filesystem supports
+them:
+    setfacl -R -m u:sysbackup:rX /home
+    setfacl -R -m d:u:sysbackup:rX /home
 
 The recommended procedure to schedule backups is to adapt the provided
 systemd timer (sysbackup.timer). By default, it runs the sysbackup
 daily at 5:43 in the morning. Override this by executing
 `systemctl edit --full sysbackup.service`.
+
+In order to actually do anything, you need to set $BACKUP to true
+in `/etc/sysbackup/backup.conf`. Otherwise the daemon just exits.
 
  -- Maximilian Stein <m@steiny.biz>  Sat, 23 Dec 2017 05:38:34 +0100
