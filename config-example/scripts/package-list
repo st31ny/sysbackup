@@ -1,0 +1,4 @@
+#!/bin/sh
+if which dpkg ; then
+    dpkg --get-selections
+fi
