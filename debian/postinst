@@ -21,7 +21,10 @@ set -e
 case "$1" in
     configure)
         adduser --quiet --system --home /var/lib/sysbackup sysbackup
-        sysbackup-create-ssh-key
+
+        set +e
+        yes "no" | sysbackup-create-ssh-key
+        set -e
 
         systemctl enable sysbackup.timer
         systemctl start sysbackup.timer
