@@ -247,6 +247,32 @@ done
 echo_verbose "Running scripts in '$SCRIPTS' done."
 
 #####################################################################################
+## Build options for rsync
+rsync_opt_i=0
+rsync_opt=()
+add_opts() {
+    for arg in "$@"; do
+        rsync_opt[$rsync_opt_i]="$arg"
+        ((++rsync_opt_i))
+    done
+}
+add_opts $RSYNC_OPTIONS_DEFAULT
+if [ "$EXCLUDEMARKER" != "" ] ; then
+    add_opts "--exclude-from=$tmpfile"
+fi
+if [ "$SSH_ID_FILE" != "" ] ; then
+    add_opts "--rsh=ssh -i \"$SSH_ID_FILE\""
+fi
+if [ "$VERBOSE" = true ] ; then
+    add_opts $RSYNC_OPTIONS_VERBOSE
+fi
+add_opts $RSYNC_OPTIONS
+if [ "$VERBOSE" = true ] ; then
+    >&2 echo "$0: Rsync options:"
+    >&2 printf "$0:     %s\n" "${rsync_opt[@]}"
+fi
+
+#####################################################################################
 ## Xfer
 echo_verbose "XFER: Begin"
 for i in "${!srcnames[@]}"; do
@@ -254,22 +280,12 @@ for i in "${!srcnames[@]}"; do
     path="${srcdirs[$i]}"
     dest="$TARGET/$name"
     echo_verbose ".Preparing '$name'..."
-    options="$RSYNC_OPTIONS_DEFAULT"
     if [ "$EXCLUDEMARKER" != "" ] ; then
         echo_verbose "..Find excluded dirs for '$name' in '$path'"
         $DRYRUN find "$path" -type f -name "$EXCLUDEMARKER" -fprintf "$tmpfile" '%h\n'
-        options+=" --exclude-from=$tmpfile"
     fi
-    if [ "$SSH_ID_FILE" != "" ] ; then
-        options+=" --rsh=\"ssh -i '$SSH_ID_FILE'\""
-    fi
-    if [ "$verbose" = true ] ; then
-        options+=" $RSYNC_OPTIONS_VERBOSE"
-    fi
-    options+=" $RSYNC_OPTIONS"
-
     echo_normal "Backup $path => $dest"
-    $DRYRUN rsync $options "$path" "$dest"
+    $DRYRUN rsync "${rsync_opt[@]}" "$path" "$dest"
     echo_verbose " ... done rsync $path => $dest"
 done
 echo_verbose "XFER: End"
