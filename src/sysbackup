@@ -1,0 +1,256 @@
+#!/bin/bash -e
+
+#####################################################################################
+## Application Configuration
+CONFIGDIR="$SYSBACKUP_ROOT/etc/sysbackup/"
+SCRIPTS_WD="$SYSBACKUP_ROOT/var/lib/sysbackup/scripts/"
+CONFIG="$CONFIGDIR/backup.conf"
+SOURCES=""
+SOURCES_DEFAULT="$CONFIGDIR/sources/*.list"
+SCRIPTS=""
+SCRIPTS_DEFAULT="$CONFIGDIR/scripts/*"
+TARGET=
+EXCLUDEMARKER=".sysbackup-exclude"
+RSYNC_OPTIONS_DEFAULT="--archive --delete --delete-excluded --one-file-system \
+                       --compress --hard-links --inplace --numeric-ids"
+RSYNC_OPTIONS_VERBOSE="--verbose --progress --human-readable"
+RSYNC_OPTIONS=
+
+BACKUP=false
+VERBOSE=false
+DRY_RUN=false
+HELP=false
+
+tmpfile=$(mktemp)
+[ $? -eq 0 ] || {
+    >&2 echo "$0: ERROR: Unable to create temporary file."
+    exit 9
+}
+
+#####################################################################################
+## Utilities
+echo_normal() {
+    >&2 echo "$0: $@"
+}
+echo_error() {
+    >&2 echo "$0: ERROR: $@"
+}
+echo_verbose() {
+    if [ "$VERBOSE" = true ] ; then
+        >&2 echo "$0: $@"
+    fi
+}
+dry_run() {
+    #>&1 printf "\"%s\" " "$@"
+    #>&1 printf "\n"
+    >&1 echo "$@"
+}
+free() {
+    echo_verbose "Freeing resources"
+    rm -f "$tmpfile"
+}
+tranpfn() {
+    echo_error "TRAPPED"
+    free
+    exit -1
+}
+trap trapfun SIGINT SIGTERM
+
+#####################################################################################
+## Command Line Configuration
+# https://stackoverflow.com/a/29754866/5605853
+set +e
+getopt --test > /dev/null
+if [[ $? -ne 4 ]]; then
+    >&2 echo "Error: `getopt --test` failed in this environment."
+    exit 1
+fi
+set -e
+
+OPTIONS=hdc:v
+LONGOPTIONS=dry-run,help,config:,verbose
+
+# -temporarily store output to be able to check for errors
+# -e.g. use “--options” parameter by name to activate quoting/enhanced mode
+# -pass arguments only via   -- "$@"   to separate them correctly
+PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
+if [[ $? -ne 0 ]]; then
+    # e.g. $? == 1
+    #  then getopt has complained about wrong arguments to stdout
+    exit 2
+fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+# now enjoy the options in order and nicely split until we see --
+while true; do
+    case "$1" in
+        -d|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -h|--help)
+            HELP=true
+            shift
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -c|--config)
+            CONFIG="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo_error "Parsing command line option '$1'"
+            exit 3
+            ;;
+    esac
+done
+
+# handle non-option arguments
+if [[ $# -ne 0 ]]; then
+    echo_error "No positional arguments accepted"
+    exit 4
+fi
+
+# Help?
+if $HELP ; then
+cat << EOF
+Usage:
+    $0 [<options>]
+
+Description:
+    Execute pre-backup scripts and transfer all specified files.
+
+Supported options:
+  -h,--help         Print this help and exit
+  -c,--config file  Use 'file' as config file instead of the default
+                    (\$SYSBACKUP_ROOT/etc/sysbackup/backup.conf)
+  -d,--dry-run      Dry run. Don't actually do anything, just show what
+                    would happen.
+  -v,--verbose      Be verbose.
+EOF
+
+    exit 0
+fi
+
+#####################################################################################
+## User Configuration
+# default
+echo_verbose "Read config file from $CONFIG"
+source "$CONFIG"
+if [ $? -ne 0 ] ; then
+    echo_error "Cannot read configuration file."
+    exit 5
+fi
+
+# backup enabled?
+$BACKUP || {
+    echo_verbose "\$BACKUP set to false. Exiting now."
+cat <<EOF >&2
+
+Apparently, $0 has not been configured yet.
+
+If you are ready, set the following variable in your configuration
+file ("$CONFIG"):
+    BACKUP=true
+EOF
+    exit 0
+}
+
+# sanitize stuff
+if [ "$TARGET" == "" ]; then
+    echo_error "No TARGET defined! Set in $SOURCE."
+    exit 6
+fi
+
+[ "$SOURCES" == "" ] && SOURCE="$SOURCES_DEFAULT"
+[ "$SCRIPTS" == "" ] && SCRIPTS="$SCRIPTS_DEFAULT"
+
+# dry run?
+DRYRUN=
+if [ "$DRY_RUN" = true ] ; then
+    DRYRUN=dry_run
+fi
+
+#####################################################################################
+## Expand Sources
+srcnames=()
+srcdirs=()
+echo_verbose "Reading source files..."
+for file in $SOURCES; do
+    echo_verbose "Reading source file '$file'..."
+    while read -r line
+    do
+        [ "$line" == "" ] && continue
+        if case "$line" in "#*") ;; *) false;; esac; then
+            continue
+        fi
+        name=${line%%=*}
+        dir=${line#*=}
+        if [ "$name" == "$line" ] ; then
+            name=${line//[[.slash.]]/_}
+        fi
+        if [[ "$name" == */* ]] ; then
+            echo_error "Source name must not contain / as in '$name'."
+            exit 7
+        fi
+        srcnames+=("$name")
+        srcdirs+=("$dir")
+        echo_verbose "Will backup '$dir' with target name '$name'"
+    done < "$file"
+done
+if [ $? -ne 0 ] ; then
+    echo_error "Reading source files failed."
+    exit 8
+fi
+
+echo_verbose "srcnames: ${srcnames[@]}"
+echo_verbose "srcdirs: ${srcdirs[@]}"
+
+#####################################################################################
+## Run all scripts
+echo_verbose "Running scripts in '$SCRIPTS'..."
+for file in $SCRIPTS; do
+    file="$(readlink -f "$file")"
+    if [ -x "$file" ]; then
+        name="$(basename "$file")"
+        dir="$SCRIPTS_WD/$name"
+        echo_verbose "Creating script wd '$dir'."
+        $DRYRUN mkdir -p "$dir"
+        echo_verbose "Running script '$file' (WD='$dir')."
+        $DRYRUN "(cd "$dir"; 0<&- "$file" > "$dir"/stdout)"
+    fi
+done
+
+#####################################################################################
+## Xfer
+echo_verbose "XFER: Begin"
+for i in "${!srcnames[@]}"; do
+    name="${srcnames[$i]}"
+    path="${srcdirs[$i]}"
+    dest="$TARGET/$name"
+    options="$RSYNC_OPTIONS_DEFAULT"
+    if [ "$EXCLUDEMARKER" != "" ] ; then
+        echo_verbose "Find excluded dirs for '$name' in '$path'"
+        $DRYRUN find "$path" -type f -name "$EXCLUDEMARKER" -fprintf "$tmpfile" '%h\n'
+        options+=" --exclude-from=$tmpfile"
+    fi
+    $verbose && options+=" $RSYNC_OPTIONS_VERBOSE"
+    options+="$RSYNC_OPTIONS"
+
+    echo_normal "Backup $path => $dest"
+    $DRYRUN rsync $options "$path" "$dest"
+    echo_verbose " ... done rsync $path => $dest"
+done
+echo_verbose "XFER: End"
+
+#####################################################################################
+## Free resources
+free
+exit 0

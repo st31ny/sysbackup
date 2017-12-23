@@ -1,0 +1,128 @@
+#!/bin/bash -e
+
+#####################################################################################
+## Application Configuration
+SSH_ID_FILE="$SYSBACKUP_ROOT/var/lib/sysbackup/.ssh/id_rsa"
+USER="sysbackup"
+KEYGEN_OPTIONS="-y"
+USER_SHELL="/bin/sh"
+
+VERBOSE=false
+DRY_RUN=false
+HELP=false
+
+#####################################################################################
+## Utilities
+echo_normal() {
+    >&2 echo "$0: $@"
+}
+echo_error() {
+    >&2 echo "$0: ERROR: $@"
+}
+echo_verbose() {
+    if [ "$VERBOSE" = true ] ; then
+        >&2 echo "$0: $@"
+    fi
+}
+dry_run() {
+    #>&1 printf "\"%s\" " "$@"
+    #>&1 printf "\n"
+    >&1 echo "$@"
+}
+
+#####################################################################################
+## Command Line Configuration
+# https://stackoverflow.com/a/29754866/5605853
+set +e
+getopt --test > /dev/null
+if [[ $? -ne 4 ]]; then
+    >&2 echo "Error: `getopt --test` failed in this environment."
+    exit 1
+fi
+set -e
+
+OPTIONS=hdu:vf:
+LONGOPTIONS=dry-run,help,user:,verbose,file:
+
+# -temporarily store output to be able to check for errors
+# -e.g. use “--options” parameter by name to activate quoting/enhanced mode
+# -pass arguments only via   -- "$@"   to separate them correctly
+PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
+if [[ $? -ne 0 ]]; then
+    # e.g. $? == 1
+    #  then getopt has complained about wrong arguments to stdout
+    exit 2
+fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
+
+# now enjoy the options in order and nicely split until we see --
+while true; do
+    case "$1" in
+        -d|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -h|--help)
+            HELP=true
+            shift
+            ;;
+        -v|--verbose)
+            VERBOSE=true
+            shift
+            ;;
+        -u|--user)
+            USER="$2"
+            shift 2
+            ;;
+        -f|--file)
+            SSH_ID_FILE="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo_error "Parsing command line option '$1'"
+            exit 3
+            ;;
+    esac
+done
+
+# handle non-option arguments
+if [[ $# -ne 0 ]]; then
+    echo_error "No positional arguments accepted"
+    exit 4
+fi
+
+# Help?
+if $HELP; then
+cat << EOF
+Usage:
+    $0 [<options>]
+
+Description:
+    Get the SSH public key for the sysbackup user.
+
+Supported options:
+  -h,--help         Print this help and exit
+  -u,--user user    Set the sysbackup user (default: '$USER')
+  -f,--file file    Set the SSH id file (default: '$SSH_ID_FILE')
+  -d,--dry-run      Dry run. Don't actually do anything, just show what
+                    would happen.
+  -v,--verbose      Be verbose.
+EOF
+    exit 0
+fi
+
+# dry run?
+DRYRUN=
+if [ "$DRY_RUN" = true ] ; then
+    DRYRUN=dry_run
+fi
+
+#####################################################################################
+## Execute SSH-Keygen
+echo_verbose "Call SSH keygen"
+$DRYRUN su - "$USER" -s "$USER_SHELL" -c "ssh-keygen $KEYGEN_OPTIONS -f \"$SSH_ID_FILE\""
