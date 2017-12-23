@@ -1,3 +1,9 @@
+sysbackup (0.1-2) unstable; urgency=medium
+
+  * Enable and start systemd timer
+
+ -- Maximilian Stein <ms@alarm-dispatcher.de>  Sat, 23 Dec 2017 07:14:08 +0100
+
 sysbackup (0.1-1) unstable; urgency=medium
 
   * Initial Release.

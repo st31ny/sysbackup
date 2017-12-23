@@ -1,11 +1,16 @@
 sysbackup for Debian
 -------------------
 
-A systemd service and timer have been added to the package. The timer
-schedules the service daily at 5:43 in the morning. The service unit stays
-active until the backup is complete.
+A systemd service has been added to the package. The service unit stays
+active until the backup is complete and avoids multiple parallel backups.
 
 By default, sysbackup is run as user "sysbackup". In order to run it as root,
-use `systemctl edit sysbackup.service` and change the stanza appropriately.
+use `systemctl edit --full sysbackup.service` and change the stanza
+appropriately.
+
+The recommended procedure to schedule backups is to adapt the provided
+systemd timer (sysbackup.timer). By default, it runs the sysbackup
+daily at 5:43 in the morning. Override this by executing
+`systemctl edit --full sysbackup.service`.
 
  -- Maximilian Stein <m@steiny.biz>  Sat, 23 Dec 2017 05:38:34 +0100

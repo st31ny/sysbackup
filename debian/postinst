@@ -22,6 +22,9 @@ case "$1" in
     configure)
         adduser --quiet --system --home /var/lib/sysbackup sysbackup
         sysbackup-create-ssh-key
+
+        systemctl enable sysbackup.timer
+        systemctl start sysbackup.timer
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
