@@ -170,7 +170,7 @@ if [ "$TARGET" == "" ]; then
     exit 6
 fi
 
-[ "$SOURCES" == "" ] && SOURCE="$SOURCES_DEFAULT"
+[ "$SOURCES" == "" ] && SOURCES="$SOURCES_DEFAULT"
 [ "$SCRIPTS" == "" ] && SCRIPTS="$SCRIPTS_DEFAULT"
 
 # dry run?
