@@ -2,7 +2,7 @@
 
 #####################################################################################
 ## Application Configuration
-SSH_ID_FILE="$SYSBACKUP_ROOT/var/lib/sysbackup/.ssh/id_rsa"
+SSH_ID_FILE="$SYSBACKUP_ROOT/var/lib/sysbackup/.ssh/id_ed25519"
 USER="sysbackup"
 KEYGEN_OPTIONS="-t ed25519 -N \"\""
 USER_SHELL="/bin/sh"
