@@ -4,7 +4,7 @@
 ## Application Configuration
 SSH_ID_FILE="$SYSBACKUP_ROOT/var/lib/sysbackup/.ssh/id_rsa"
 USER="sysbackup"
-KEYGEN_OPTIONS="-t rsa -b 4096 -N \"\""
+KEYGEN_OPTIONS="-t ed25519 -N \"\""
 USER_SHELL="/bin/sh"
 
 VERBOSE=false
