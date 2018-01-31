@@ -18,7 +18,7 @@ are forwarded to `ssh-keygen`.
 
 `sysbackup-get-ssh-key`
 
-Displays contents of `/var/lib/sysbackup/.ssh/id_rsa.pub`.
+Displays contents of `/var/lib/sysbackup/.ssh/id_ed25519.pub`.
 
 Dependencies
 ------------
@@ -75,7 +75,7 @@ directory can simply create files and/or write to stdout. The directory
 If the scripts working directories do not exist, they are created before calling
 the scripts. They are not purged after running.
 
-`/var/lib/sysbackup/.ssh/id_rsa.pub`
+`/var/lib/sysbackup/.ssh/id_25519.pub`
 
 Call `sysbackup-create-ssh-key` (as root) to create an SSH-Key for the sysbackup
 user. Call `sysbackup-get-ssh-key` to show the public key.

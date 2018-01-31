@@ -10,7 +10,7 @@ SOURCES_DEFAULT="$CONFIGDIR/sources/*.list"
 SCRIPTS=""
 SCRIPTS_DEFAULT="$CONFIGDIR/scripts/*"
 TARGET=
-SSH_ID_FILE="$SYSBACKUP_ROOT/var/lib/sysbackup/.ssh/id_rsa"
+SSH_ID_FILE="$SYSBACKUP_ROOT/var/lib/sysbackup/.ssh/id_ed25519"
 EXCLUDEMARKER=".sysbackup-exclude"
 RSYNC_OPTIONS_DEFAULT="--archive --delete --delete-excluded --one-file-system \
                        --compress --hard-links --inplace --numeric-ids"
