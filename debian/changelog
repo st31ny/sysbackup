@@ -1,3 +1,9 @@
+sysbackup (0.2.5-1) unstable; urgency=medium
+
+  * New upstream bugfix release 0.2.5.
+
+ -- Maximilian Stein <ms@alarm-dispatcher.de>  Fri, 16 Mar 2018 16:29:46 +0100
+
 sysbackup (0.2.4-2) unstable; urgency=medium
 
   * postinst: Do not fail if timer unit is masked.
