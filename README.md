@@ -93,6 +93,13 @@ Hooks
 
 ToDo
 
+Snapshot Management
+-------------------
+
+Currently, there is no snapshot management included. See the wiki for
+configuration examples to get snapshots. Snapshots could be implemented with
+hooks.
+
 Data Transfer
 -------------
 
