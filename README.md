@@ -119,12 +119,19 @@ are appended. Finally, user-defined options in $RSYNC\_OPTIONS are appended.
 Normally, you should only need to set $RSYNC\_OPTIONS in the configuration file,
 if at all.
 
+Debian Package
+--------------
+
+Packaging files for Debian are on the branch `debian`. To build the package, use
+`gbp(1)` (available in Debian package `git-buildpackage`):
+
+    gbp buildpackage
 
 Systemd Intergration
 --------------------
 
-The package ships with a systemd daemon and timer that runs the system backup
-daily at 5:43 in the morning. Override `sysbackup.timer` as you like.
+The Debian package ships with a systemd daemon and timer that runs the system
+backup daily at 5:43 in the morning. Override `sysbackup.timer` as you like.
 
 The script is run as user `sysbackup` and so will the user defined scripts. In
 order to backup anything, this user must be able to call the requested commands
