@@ -26,8 +26,8 @@ case "$1" in
         yes "no" | sysbackup-create-ssh-key
         set -e
 
-        systemctl enable sysbackup.timer
-        systemctl start sysbackup.timer
+        systemctl enable sysbackup.timer || true
+        systemctl start sysbackup.timer || true
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
