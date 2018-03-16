@@ -50,12 +50,12 @@ free() {
     echo_verbose "Freeing resources"
     rm -f "$tmpfile"
 }
-tranpfn() {
+trapfn() {
     echo_error "TRAPPED"
     free
     exit -1
 }
-trap trapfun SIGINT SIGTERM
+trap trapfn SIGINT SIGTERM
 
 #####################################################################################
 ## Command Line Configuration
