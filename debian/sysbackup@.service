@@ -1,0 +1,11 @@
+[Unit]
+Description=sysbackup service
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/sysbackup --config=/etc/sysbackup/backup-%i.conf
+RemainAfterExit=no
+Nice=19
+IOSchedulingClass=2
+IOSchedulingPriority=7
+User=sysbackup
