@@ -1,3 +1,9 @@
+sysbackup (0.2.4-1) unstable; urgency=medium
+
+  * New upstream bugfix version 0.2.4.
+
+ -- Maximilian Stein <ms@alarm-dispatcher.de>  Fri, 16 Mar 2018 16:17:22 +0100
+
 sysbackup (0.2.3-2) unstable; urgency=medium
 
   * Add sysbackup@.service for multiple instances.
